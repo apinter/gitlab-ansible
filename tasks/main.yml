@@ -1,0 +1,49 @@
+---
+# tasks file for gitlab
+- name: Adding gitlab-ce repo
+  copy:
+    src: gitlab-ce.repo
+    dest: /etc/yum.repos.d/
+    owner: root
+    group: root
+
+- name: Enable EPEL repo
+  yum:
+    name: "epel-release"
+    state: latest
+
+- name: Full system update
+  yum:
+    name: "*"
+    state: latest
+
+- name: Installing GitLab dependencies
+  yum:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  with_items:
+      - curl
+      - policycoreutils
+      - postfix
+      - pygpgme
+      - yum-utils
+# At this time GitLab has some issues with the package signatures
+# Remove disable_gpg_check once they have a solution
+- name: Installing gitlab-ce
+  yum:
+    name: "gitlab-ce"
+    state: latest
+    disable_gpg_check: yes
+
+- name: Firewalld configuration - Enable http
+  firewalld:
+   port: 80/tcp
+   permanent: true
+   state: enabled
+
+- name: Firewalld configuration for https
+  firewalld:
+   port: 443/tcp
+   permanent: true
+   state: enabled
